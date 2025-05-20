@@ -1,0 +1,476 @@
+<html>
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+      <title>Audio-samples</title>
+      <link rel="stylesheet" type="text/css" href="stylesheet.css"/>
+      <link rel="stylesheet"
+href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+      <!-- <link rel="shortcut icon" href="../../images/taco.png"> -->
+      <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      jax: ["input/TeX", "output/HTML-CSS"],
+      extensions: ["tex2jax.js"],
+      "HTML-CSS": { preferredFont: "TeX", availableFonts: ["STIX","TeX"], scale: 77},
+      tex2jax: { inlineMath: [ ["$", "$"], ["\\(","\\)"] ], displayMath: [ ["$$","$$"], ["\\[", "\\]"] ], processEscapes: true, ignoreClass: "tex2jax_ignore|dno" },
+      TeX: { noUndefined: { attributes: { mathcolor: "red", mathbackground: "#FFEEEE", mathsize: "50%" } } },
+      messageStyle: "none"
+    });
+    </script>    
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js"></script>
+      <script>
+         function play(path) {{
+           var player = document.getElementById('player');
+           player.src = path;
+           player.play();
+         }}
+         function isInternetExplorer() {
+            ua = navigator.userAgent;
+            /* MSIE used to detect old browsers and Trident used to newer ones*/
+            return ua.indexOf("MSIE ") > -1 || ua.indexOf("Trident/") > -1;
+          }
+
+          /* Define the Animation class */
+          function Animation(frames, img_id, slider_id, interval, loop_select_id){
+            this.img_id = img_id;
+            this.slider_id = slider_id;
+            this.loop_select_id = loop_select_id;
+            this.interval = interval;
+            this.current_frame = 0;
+            this.direction = 0;
+            this.timer = null;
+            this.frames = new Array(frames.length);
+
+            for (var i=0; i<frames.length; i++)
+            {
+             this.frames[i] = new Image();
+             this.frames[i].src = frames[i];
+            }
+            var slider = document.getElementById(this.slider_id);
+            slider.max = this.frames.length - 1;
+            if (isInternetExplorer()) {
+                // switch from oninput to onchange because IE <= 11 does not conform
+                // with W3C specification. It ignores oninput and onchange behaves
+                // like oninput. In contrast, Mircosoft Edge behaves correctly.
+                slider.setAttribute('onchange', slider.getAttribute('oninput'));
+                slider.setAttribute('oninput', null);
+            }
+            this.set_frame(this.current_frame);
+          }
+
+          Animation.prototype.get_loop_state = function(){
+            return 0;
+          }
+
+          Animation.prototype.set_frame = function(frame){
+            this.current_frame = frame;
+            document.getElementById(this.img_id).src =
+                    this.frames[this.current_frame].src;
+            document.getElementById(this.slider_id).value = this.current_frame;
+          }
+
+          Animation.prototype.next_frame = function()
+          {
+            this.set_frame(Math.min(this.frames.length - 1, this.current_frame + 1));
+          }
+
+          Animation.prototype.previous_frame = function()
+          {
+            this.set_frame(Math.max(0, this.current_frame - 1));
+          }
+
+          Animation.prototype.first_frame = function()
+          {
+            this.set_frame(0);
+          }
+
+          Animation.prototype.last_frame = function()
+          {
+            this.set_frame(this.frames.length - 1);
+          }
+
+          Animation.prototype.slower = function()
+          {
+            this.interval /= 0.7;
+            if(this.direction > 0){this.play_animation();}
+            else if(this.direction < 0){this.reverse_animation();}
+          }
+
+          Animation.prototype.faster = function()
+          {
+            this.interval *= 0.7;
+            if(this.direction > 0){this.play_animation();}
+            else if(this.direction < 0){this.reverse_animation();}
+          }
+
+          Animation.prototype.anim_step_forward = function()
+          {
+            this.current_frame += 1;
+            if(this.current_frame < this.frames.length){
+              this.set_frame(this.current_frame);
+            }else{
+              var loop_state = this.get_loop_state();
+              if(loop_state == "loop"){
+                this.first_frame();
+              }else if(loop_state == "reflect"){
+                this.last_frame();
+                this.reverse_animation();
+              }else{
+                this.pause_animation();
+                this.last_frame();
+              }
+            }
+          }
+
+          Animation.prototype.anim_step_reverse = function()
+          {
+            this.current_frame -= 1;
+            if(this.current_frame >= 0){
+              this.set_frame(this.current_frame);
+            }else{
+              var loop_state = this.get_loop_state();
+              if(loop_state == "loop"){
+                this.last_frame();
+              }else if(loop_state == "reflect"){
+                this.first_frame();
+                this.play_animation();
+              }else{
+                this.pause_animation();
+                this.first_frame();
+              }
+            }
+          }
+
+          Animation.prototype.pause_animation = function()
+          {
+            this.direction = 0;
+            if (this.timer){
+              clearInterval(this.timer);
+              this.timer = null;
+            }
+          }
+
+          Animation.prototype.play_animation = function()
+          {
+            this.pause_animation();
+            this.direction = 1;
+            var t = this;
+            if (!this.timer) this.timer = setInterval(function() {
+                t.anim_step_forward();
+            }, this.interval);
+          }
+
+          Animation.prototype.reverse_animation = function()
+          {
+            this.pause_animation();
+            this.direction = -1;
+            var t = this;
+            if (!this.timer) this.timer = setInterval(function() {
+                t.anim_step_reverse();
+            }, this.interval);
+          }
+      </script>
+      <style>
+        body{
+          width: 1000px;
+          margin: 10 auto;
+        }
+        .animation {
+            display: inline-block;
+            text-align: center;
+        }
+        input[type=range].anim-slider {
+            width: 374px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .anim-buttons {
+            margin: 8px 0px;
+        }
+        .anim-buttons button {
+            padding: 0;
+            width: 36px;
+        }
+        .anim-state label {
+            margin-right: 8px;
+        }
+        .anim-state input {
+            margin: 0;
+            vertical-align: middle;
+        }
+        .audio-cell {
+        /* Center audio widgets in the table cell. */
+        text-align: center;
+        padding-bottom: 1px;
+        padding-top: 1px;
+        }
+        .audio-cell-padded {
+        text-align: center;
+        padding-bottom: 10px;
+        padding-top: 10px;
+        }
+        .audio-header {
+        /* Don't wrap header text. */
+        white-space: nowrap;
+        /* Some breaking space between headers for readability. */
+        padding-right: 5px;
+        padding-left: 5px;
+        }
+        .reference-cell {
+        /* For uniformity and to wrap long reference text, limit the reference cell's width. */
+        width: 25%;
+        padding-top: 20px;
+        padding-bottom: 20px;
+        }
+        .sample audio {
+        vertical-align: middle;
+        padding-left: 3px;
+        padding-right: 3px;
+        }
+        .round-button {
+        box-sizing: border-box;
+        display:block;
+        width:30px;
+        height:30px;
+        padding-top: 8px;
+        padding-left: 3px;
+        line-height: 6px;
+        border: 1.2px solid #000;
+        border-radius: 50%;
+        color: #000;
+        text-align:center;
+        background-color: rgba(0,0,0,0.00);
+        font-size:6px;
+        box-shadow: 0px 0px 2px rgba(0,0,0,1);
+        transition: all 0.2s ease;
+        }
+        .round-button:hover {
+        background-color: rgba(0,0,0,0.0);
+        box-shadow: 0px 0px 4px rgba(0,0,0,1);
+        }
+        .round-button:active {
+        background-color: rgba(0,0,0,0.01);
+        box-shadow: 0px 0px 1px rgba(0,0,0,1);
+        }
+        audio {
+        transform: scale(0.92);
+        transform-origin: left;
+        }
+      </style>
+   </head>
+
+ <body>
+     <div class="main">
+       <article>
+         <header>
+            <font size="+1"><h1 align="center">Segmentation-Variant Codebooks for Preservation of Paralinguistic and Prosodic Information</h1></font>
+            <p style="line-height:100%", align="center"> Anonymous Interspeech2025 submission</p>
+
+         </header>
+      </article>
+      </div>
+      
+      <div align="justify">
+         
+      <h2>Segmentation-Variant Codebooks</h2>
+        
+         We encode speech into continuous representations using HuBERT-large. Our method operates as follows: first, speech inputs are encoded into frame-wise continuous representations via HuBERT.
+         These representations are then pooled across segmentation boundaries (frames, phones, words, and utterances) derived from forced alignment applied to paired speech-text data.
+         For phone-, word-, and utterance-level segments, mean pooling is applied to aggregate frame-wise representations within each segment, while frame-level representations remain unpooled.
+         Each pooled or unpooled representation (corresponding to a segmentation level) is quantized using a dedicated Segmentation-Variant Codebook.
+         To construct these codebooks, we train separate K-means models (initialized with K-means++) on the representations for each segmentation level: the frame-level codebook is trained on raw frame-wise HuBERT outputs, while phone-, word-, and utterance-level codebooks are trained on their respective pooled representations.
+         During inference, quantization is performed by assigning each representation (pooled or unpooled) to the nearest cluster centroid in its corresponding codebook using Euclidean distance. This results in four parallel DSU output streams, each capturing linguistic structure at a distinct granularity (frame, phone, word, utterance).
+
+      <h2>Processing Multiple Streams of DSUs</h2>
+        
+         For downstream tasks, there are potentially many ways that Segmentation-Variant DSU output streams could be processed.
+         We choose to mean pool all DSUs across matching segmentations previously use to pool the continuous representations.
+         For example, all frame DSUs that fall within the same utterance segment are averaged with the utterance DSU, all frame DSUs that fall within the same word segment are averaged with the same word DSU, and the same with the phones.
+         Therefore, the resulting sequence is the same length as the frame-level stream of DSUs. However, we recognize that future work may want to explore other processing methods of the multiple streams of DSUs. The full method overview can be seen in Figure 1.
+
+      <figure>
+        <p style="text-align:center"><img src="fig/SVC.png" alt="model" width=700px/></p>
+        <figcaption style="text-align:center">Figure 1. Segmentation-Variant Codebooks processing overview. $h_n$ refers to continuous hidden representations at the $n$th frame, $S_n$ refers to the resulting frame-level stream obtained from mean pooling multiple streams of DSUs based on segmentation.</figcaption>
+      </figure>
+
+         
+        <h2>Resynthesized Audio Samples</h2>
+
+    <figure>
+        <p style="text-align:center"><img src="fig/resynthesis.png" alt="result" width=400px/></p>
+    </figure>
+         
+    <table>
+        <tr>
+            <td style="text-align:center"><b>Sample ID</b></td>
+            <td style="text-align:center"><b>Ground Truth</b></td>
+            <td style="text-align:center"><b>Continuous Features</b></td>
+            <td style="text-align:center"><b>Discrete Features k=500</b></td>
+            <td style="text-align:center"><b>Discrete Features k=2000</b></td>
+            <td style="text-align:center"><b>Segmentation Variant Codebooks k=500</b></td>
+        </tr>
+        <tr>
+            <td class="small-text">ex01_happy_00362</td>
+            <td><audio controls><source src="audio/ground-truth/ex01_happy_00362_gt.wav"></audio></td>
+            <td><audio controls><source src="audio/continuous/ex01_happy_00362_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame500/ex01_happy_00362_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame2000/ex01_happy_00362_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/segmentation-variant/ex01_happy_00362_pred.wav"></audio></td>
+        </tr>
+        <tr>
+            <td class="small-text">ex01_happy_00363</td>
+            <td><audio controls><source src="audio/ground-truth/ex01_happy_00363_gt.wav"></audio></td>
+            <td><audio controls><source src="audio/continuous/ex01_happy_00363_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame500/ex01_happy_00363_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame2000/ex01_happy_00363_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/segmentation-variant/ex01_happy_00363_pred.wav"></audio></td>
+        </tr>
+        <tr>
+            <td class="small-text">ex02_confused_00376</td>
+            <td><audio controls><source src="audio/ground-truth/ex02_confused_00376_gt.wav"></audio></td>
+            <td><audio controls><source src="audio/continuous/ex02_confused_00376_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame500/ex02_confused_00376_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame2000/ex02_confused_00376_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/segmentation-variant/ex02_confused_00376_pred.wav"></audio></td>
+        </tr>
+        <tr>
+            <td class="small-text">ex02_confused_00377</td>
+            <td><audio controls><source src="audio/ground-truth/ex02_confused_00377_gt.wav"></audio></td>
+            <td><audio controls><source src="audio/continuous/ex02_confused_00377_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame500/ex02_confused_00377_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame2000/ex02_confused_00377_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/segmentation-variant/ex02_confused_00377_pred.wav"></audio></td>
+        </tr>
+        <tr>
+            <td class="small-text">ex02_default_emphasis_00181</td>
+            <td><audio controls><source src="audio/ground-truth/ex02_default_emphasis_00181_gt.wav"></audio></td>
+            <td><audio controls><source src="audio/continuous/ex02_default_emphasis_00181_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame500/ex02_default_emphasis_00181_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame2000/ex02_default_emphasis_00181_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/segmentation-variant/ex02_default_emphasis_00181_pred.wav"></audio></td>
+        </tr>
+        <tr>
+            <td class="small-text">ex02_enunciated_00370</td>
+            <td><audio controls><source src="audio/ground-truth/ex02_enunciated_00370_gt.wav"></audio></td>
+            <td><audio controls><source src="audio/continuous/ex02_enunciated_00370_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame500/ex02_enunciated_00370_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame2000/ex02_enunciated_00370_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/segmentation-variant/ex02_enunciated_00370_pred.wav"></audio></td>
+        </tr>
+        <tr>
+            <td class="small-text">ex03-ex01_angry_006-ex01_angry_css000</td>
+            <td><audio controls><source src="audio/ground-truth/ex03-ex01_angry_006-ex01_angry_css000_gt.wav"></audio></td>
+            <td><audio controls><source src="audio/continuous/ex03-ex01_angry_006-ex01_angry_css000_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame500/ex03-ex01_angry_006-ex01_angry_css000_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame2000/ex03-ex01_angry_006-ex01_angry_css000_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/segmentation-variant/ex03-ex01_angry_006-ex01_angry_css000_pred.wav"></audio></td>
+        </tr>
+        <tr>
+            <td class="small-text">ex03-ex01_angry_006-ex03_angry_css000</td>
+            <td><audio controls><source src="audio/ground-truth/ex03-ex01_angry_006-ex03_angry_css000_gt.wav"></audio></td>
+            <td><audio controls><source src="audio/continuous/ex03-ex01_angry_006-ex03_angry_css000_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame500/ex03-ex01_angry_006-ex03_angry_css000_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame2000/ex03-ex01_angry_006-ex03_angry_css000_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/segmentation-variant/ex03-ex01_angry_006-ex03_angry_css000_pred.wav"></audio></td>
+        </tr>
+        <tr>
+            <td class="small-text">ex03-ex01_sarcastic_002-ex01_sarcastic_css000</td>
+            <td><audio controls><source src="audio/ground-truth/ex03-ex01_sarcastic_002-ex01_sarcastic_css000_gt.wav"></audio></td>
+            <td><audio controls><source src="audio/continuous/ex03-ex01_sarcastic_002-ex01_sarcastic_css000_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame500/ex03-ex01_sarcastic_002-ex01_sarcastic_css000_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame2000/ex03-ex01_sarcastic_002-ex01_sarcastic_css000_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/segmentation-variant/ex03-ex01_sarcastic_002-ex01_sarcastic_css000_pred.wav"></audio></td>
+        </tr>
+        <tr>
+            <td class="small-text">ex03-ex01_sarcastic_002-ex01_sarcastic_css001</td>
+            <td><audio controls><source src="audio/ground-truth/ex03-ex01_sarcastic_002-ex01_sarcastic_css001_gt.wav"></audio></td>
+            <td><audio controls><source src="audio/continuous/ex03-ex01_sarcastic_002-ex01_sarcastic_css001_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame500/ex03-ex01_sarcastic_002-ex01_sarcastic_css001_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame2000/ex03-ex01_sarcastic_002-ex01_sarcastic_css001_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/segmentation-variant/ex03-ex01_sarcastic_002-ex01_sarcastic_css001_pred.wav"></audio></td>
+        </tr>
+        <tr>
+            <td class="small-text">ex03_default_emphasis_00182</td>
+            <td><audio controls><source src="audio/ground-truth/ex03_default_emphasis_00182_gt.wav"></audio></td>
+            <td><audio controls><source src="audio/continuous/ex03_default_emphasis_00182_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame500/ex03_default_emphasis_00182_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame2000/ex03_default_emphasis_00182_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/segmentation-variant/ex03_default_emphasis_00182_pred.wav"></audio></td>
+        </tr>
+        <tr>
+            <td class="small-text">ex03_laughing_00365</td>
+            <td><audio controls><source src="audio/ground-truth/ex03_laughing_00365_gt.wav"></audio></td>
+            <td><audio controls><source src="audio/continuous/ex03_laughing_00365_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame500/ex03_laughing_00365_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame2000/ex03_laughing_00365_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/segmentation-variant/ex03_laughing_00365_pred.wav"></audio></td>
+        </tr>
+        <tr>
+            <td class="small-text">ex03_laughing_00366</td>
+            <td><audio controls><source src="audio/ground-truth/ex03_laughing_00366_gt.wav"></audio></td>
+            <td><audio controls><source src="audio/continuous/ex03_laughing_00366_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame500/ex03_laughing_00366_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame2000/ex03_laughing_00366_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/segmentation-variant/ex03_laughing_00366_pred.wav"></audio></td>
+        </tr>
+        <tr>
+            <td class="small-text">ex04-ex03_fast_002-ex03_fast_css000</td>
+            <td><audio controls><source src="audio/ground-truth/ex04-ex03_fast_002-ex03_fast_css000_gt.wav"></audio></td>
+            <td><audio controls><source src="audio/continuous/ex04-ex03_fast_002-ex03_fast_css000_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame500/ex04-ex03_fast_002-ex03_fast_css000_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame2000/ex04-ex03_fast_002-ex03_fast_css000_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/segmentation-variant/ex04-ex03_fast_002-ex03_fast_css000_pred.wav"></audio></td>
+        </tr>
+        <tr>
+            <td class="small-text">ex04_sad_00364</td>
+            <td><audio controls><source src="audio/ground-truth/ex04_sad_00364_gt.wav"></audio></td>
+            <td><audio controls><source src="audio/continuous/ex04_sad_00364_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame500/ex04_sad_00364_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame2000/ex04_sad_00364_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/segmentation-variant/ex04_sad_00364_pred.wav"></audio></td>
+        </tr>
+        <tr>
+            <td class="small-text">ex04_sad_00365</td>
+            <td><audio controls><source src="audio/ground-truth/ex04_sad_00365_gt.wav"></audio></td>
+            <td><audio controls><source src="audio/continuous/ex04_sad_00365_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame500/ex04_sad_00365_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame2000/ex04_sad_00365_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/segmentation-variant/ex04_sad_00365_pred.wav"></audio></td>
+        </tr>
+        <tr>
+            <td class="small-text">ex04_whisper_00371</td>
+            <td><audio controls><source src="audio/ground-truth/ex04_whisper_00371_gt.wav"></audio></td>
+            <td><audio controls><source src="audio/continuous/ex04_whisper_00371_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame500/ex04_whisper_00371_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame2000/ex04_whisper_00371_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/segmentation-variant/ex04_whisper_00371_pred.wav"></audio></td>
+        </tr>
+        <tr>
+            <td class="small-text">ex04_whisper_00372</td>
+            <td><audio controls><source src="audio/ground-truth/ex04_whisper_00372_gt.wav"></audio></td>
+            <td><audio controls><source src="audio/continuous/ex04_whisper_00372_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame500/ex04_whisper_00372_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/frame2000/ex04_whisper_00372_pred.wav"></audio></td>
+            <td><audio controls><source src="audio/segmentation-variant/ex04_whisper_00372_pred.wav"></audio></td>
+        </tr>
+    </table>
+         
+    </div>
+
+<style>
+    table {
+        table-layout: fixed;
+        width: 100%;
+    }
+    td {
+        text-align: center;
+        width: 50px;
+        max-width: 120px;
+        font-size: 13px;
+    }
+    audio {
+        width: 180px;
+    }
+</style>
+    
+</body>
+</html>
